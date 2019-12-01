@@ -36,6 +36,16 @@ export default {
                 this.ui.changeMenu('crop');
             }
         };
+        const setAngleRangeBarOnAction = angle => {
+            if (this.ui.submenu === 'rotate') {
+                this.ui.rotate.setRangeBarAngle('setAngle', angle);
+            }
+        };
+        const onEndUndoRedo = result => {
+            setAngleRangeBarOnAction(result);
+
+            return result;
+        };
 
         return extend({
             initLoadImage: (imagePath, imageName) => (
@@ -49,13 +59,13 @@ export default {
             undo: () => {
                 if (!this.isEmptyUndoStack()) {
                     exitCropOnAction();
-                    this.undo();
+                    this.undo().then(onEndUndoRedo);
                 }
             },
             redo: () => {
                 if (!this.isEmptyRedoStack()) {
                     exitCropOnAction();
-                    this.redo();
+                    this.redo().then(onEndUndoRedo);
                 }
             },
             reset: () => {
@@ -84,10 +94,11 @@ export default {
                 }
 
                 this.ui.initializeImgUrl = URL.createObjectURL(file);
-                this.loadImageFromFile(file).then(() => {
+                this.loadImageFromFile(file).then(sizeValue => {
                     exitCropOnAction();
                     this.clearUndoStack();
-                    this.ui.resizeEditor();
+                    this.ui.activeMenuEvent();
+                    this.ui.resizeEditor({imageSize: sizeValue});
                 })['catch'](message => (
                     Promise.reject(message)
                 ));
@@ -268,13 +279,15 @@ export default {
      */
     _rotateAction() {
         return extend({
-            rotate: angle => {
-                this.rotate(angle);
+            rotate: (angle, isSilent) => {
+                this.rotate(angle, isSilent);
                 this.ui.resizeEditor();
+                this.ui.rotate.setRangeBarAngle('rotate', angle);
             },
-            setAngle: angle => {
-                this.setAngle(angle);
+            setAngle: (angle, isSilent) => {
+                this.setAngle(angle, isSilent);
                 this.ui.resizeEditor();
+                this.ui.rotate.setRangeBarAngle('setAngle', angle);
             }
         }, this._commonAction());
     },
@@ -319,6 +332,32 @@ export default {
             cancel: () => {
                 this.stopDrawingMode();
                 this.ui.changeMenu('crop');
+            },
+            preset: presetType => {
+                switch (presetType) {
+                    case 'preset-square':
+                        this.setCropzoneRect(1 / 1);
+                        break;
+                    case 'preset-3-2':
+                        this.setCropzoneRect(3 / 2);
+                        break;
+                    case 'preset-4-3':
+                        this.setCropzoneRect(4 / 3);
+                        break;
+                    case 'preset-5-4':
+                        this.setCropzoneRect(5 / 4);
+                        break;
+                    case 'preset-7-5':
+                        this.setCropzoneRect(7 / 5);
+                        break;
+                    case 'preset-16-9':
+                        this.setCropzoneRect(16 / 9);
+                        break;
+                    default:
+                        this.setCropzoneRect();
+                        this.ui.crop.changeApplyButtonStatus(false);
+                        break;
+                }
             }
         }, this._commonAction());
     },
@@ -418,7 +457,8 @@ export default {
                     position: pos.originPosition,
                     styles: {
                         fill: this.ui.text.textColor,
-                        fontSize: util.toInteger(this.ui.text.fontSize)
+                        fontSize: util.toInteger(this.ui.text.fontSize),
+                        fontFamily: 'Noto Sans'
                     }
                 }).then(() => {
                     this.changeCursor('default');

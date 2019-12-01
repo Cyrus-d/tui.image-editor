@@ -1,5 +1,5 @@
 /**
- * @author NHN Ent. FE Development Team <dl_javascript@nhnent.com>
+ * @author NHN Ent. FE Development Team <dl_javascript@nhn.com>
  * @fileoverview Test cases of "src/js/component/cropper.js"
  */
 import Theme from '../src/js/ui/theme/theme';
@@ -15,12 +15,20 @@ describe('Theme', () => {
         it('In case of icon type, the object should be returned as it is.', () => {
             const expected = {
                 active: {
+                    path: 'icon-b.svg',
+                    name: 'icon-b'
+                },
+                normal: {
+                    path: 'icon-d.svg',
+                    name: 'icon-d'
+                },
+                disabled: {
                     path: 'icon-a.svg',
                     name: 'icon-a'
                 },
-                normal: {
-                    path: 'icon-b.svg',
-                    name: 'icon-b'
+                hover: {
+                    path: 'icon-c.svg',
+                    name: 'icon-c'
                 }
             };
 

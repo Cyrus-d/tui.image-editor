@@ -17,12 +17,14 @@ const SHAPE_DEFAULT_OPTION = {
  * @ignore
  */
 class Shape extends Submenu {
-    constructor(subMenuElement, {iconStyle, menuBarPosition}) {
+    constructor(subMenuElement, {locale, iconStyle, menuBarPosition, usageStatistics}) {
         super(subMenuElement, {
+            locale,
             name: 'shape',
             iconStyle,
             menuBarPosition,
-            templateHtml
+            templateHtml,
+            usageStatistics
         });
         this.type = null;
         this.options = SHAPE_DEFAULT_OPTION;
@@ -32,9 +34,16 @@ class Shape extends Submenu {
             shapeColorButton: this.selector('#tie-shape-color-button'),
             strokeRange: new Range(this.selector('#tie-stroke-range'), defaultShapeStrokeValus),
             strokeRangeValue: this.selector('#tie-stroke-range-value'),
-            fillColorpicker: new Colorpicker(this.selector('#tie-color-fill'), '', this.toggleDirection),
-            strokeColorpicker: new Colorpicker(this.selector('#tie-color-stroke'), '#ffbb3b', this.toggleDirection)
+            fillColorpicker: new Colorpicker(
+                this.selector('#tie-color-fill'), '', this.toggleDirection, this.usageStatistics
+            ),
+            strokeColorpicker: new Colorpicker(
+                this.selector('#tie-color-stroke'), '#ffbb3b', this.toggleDirection, this.usageStatistics
+            )
         };
+
+        this.colorPickerControls.push(this._els.fillColorpicker);
+        this.colorPickerControls.push(this._els.strokeColorpicker);
     }
 
     /**
@@ -50,6 +59,8 @@ class Shape extends Submenu {
         this._els.strokeRange.on('change', this._changeStrokeRangeHandler.bind(this));
         this._els.fillColorpicker.on('change', this._changeFillColorHandler.bind(this));
         this._els.strokeColorpicker.on('change', this._changeStrokeColorHandler.bind(this));
+        this._els.fillColorpicker.on('changeShow', this.colorPickerChangeShow.bind(this));
+        this._els.strokeColorpicker.on('changeShow', this.colorPickerChangeShow.bind(this));
         this._els.strokeRangeValue.value = this._els.strokeRange.value;
         this._els.strokeRangeValue.setAttribute('readonly', true);
     }

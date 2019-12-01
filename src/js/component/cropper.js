@@ -1,14 +1,21 @@
 /**
- * @author NHN Ent. FE Development Team <dl_javascript@nhnent.com>
+ * @author NHN Ent. FE Development Team <dl_javascript@nhn.com>
  * @fileoverview Image crop module (start cropping, end cropping)
  */
-import fabric from 'fabric/dist/fabric.require';
+import snippet from 'tui-code-snippet';
+import fabric from 'fabric';
 import Component from '../interface/component';
 import Cropzone from '../extension/cropzone';
 import {keyCodes, componentNames} from '../consts';
 import {clamp} from '../util';
 
 const MOUSE_MOVE_THRESHOLD = 10;
+const DEFAULT_OPTION = {
+    top: -10,
+    left: -10,
+    height: 1,
+    width: 1
+};
 
 /**
  * Cropper components
@@ -76,11 +83,11 @@ class Cropper extends Component {
             obj.evented = false;
         });
 
-        this._cropzone = new Cropzone({
-            left: -10,
-            top: -10,
-            width: 1,
-            height: 1,
+        this._cropzone = new Cropzone(canvas, {
+            left: 0,
+            top: 0,
+            width: 0.5,
+            height: 0.5,
             strokeWidth: 0, // {@link https://github.com/kangax/fabric.js/issues/2860}
             cornerSize: 10,
             cornerColor: 'black',
@@ -91,7 +98,7 @@ class Cropper extends Component {
             lockRotation: true
         }, this.graphics.cropSelectionStyle);
 
-        canvas.deactivateAll();
+        canvas.discardActiveObject();
         canvas.add(this._cropzone);
         canvas.on('mouse:down', this._listeners.mousedown);
         canvas.selection = false;
@@ -111,7 +118,7 @@ class Cropper extends Component {
         if (!cropzone) {
             return;
         }
-        cropzone.remove();
+        canvas.remove(cropzone);
         canvas.selection = true;
         canvas.defaultCursor = 'default';
         canvas.off('mouse:down', this._listeners.mousedown);
@@ -161,10 +168,11 @@ class Cropper extends Component {
         const cropzone = this._cropzone;
 
         if (Math.abs(x - this._startX) + Math.abs(y - this._startY) > MOUSE_MOVE_THRESHOLD) {
-            cropzone.remove();
+            canvas.remove(cropzone);
             cropzone.set(this._calcRectDimensionFromPoint(x, y));
 
             canvas.add(cropzone);
+            canvas.setActiveObject(cropzone);
         }
     }
 
@@ -243,7 +251,7 @@ class Cropper extends Component {
         }
 
         if (containsCropzone) {
-            this._cropzone.remove();
+            canvas.remove(this._cropzone);
         }
 
         const imageData = {
@@ -270,10 +278,63 @@ class Cropper extends Component {
         }
 
         return {
-            left: cropzone.getLeft(),
-            top: cropzone.getTop(),
-            width: cropzone.getWidth(),
-            height: cropzone.getHeight()
+            left: cropzone.left,
+            top: cropzone.top,
+            width: cropzone.width,
+            height: cropzone.height
+        };
+    }
+
+    /**
+     * Set a cropzone square
+     * @param {number} [presetRatio] - preset ratio
+     */
+    setCropzoneRect(presetRatio) {
+        const canvas = this.getCanvas();
+        const cropzone = this._cropzone;
+
+        canvas.discardActiveObject();
+        canvas.selection = false;
+        canvas.remove(cropzone);
+
+        cropzone.set(presetRatio ? this._getPresetCropSizePosition(presetRatio) : DEFAULT_OPTION);
+
+        canvas.add(cropzone);
+        canvas.selection = true;
+
+        if (presetRatio) {
+            canvas.setActiveObject(cropzone);
+        }
+    }
+
+    /**
+     * Set a cropzone square
+     * @param {number} presetRatio - preset ratio
+     * @returns {{left: number, top: number, width: number, height: number}}
+     * @private
+     */
+    _getPresetCropSizePosition(presetRatio) {
+        const canvas = this.getCanvas();
+        const originalWidth = canvas.getWidth();
+        const originalHeight = canvas.getHeight();
+
+        const standardSize = (originalWidth >= originalHeight) ? originalWidth : originalHeight;
+        const getScale = (value, orignalValue) => (value > orignalValue) ? orignalValue / value : 1;
+
+        let width = standardSize * presetRatio;
+        let height = standardSize;
+
+        const scaleWidth = getScale(width, originalWidth);
+        [width, height] = snippet.map([width, height], sizeValue => sizeValue * scaleWidth);
+
+        const scaleHeight = getScale(height, originalHeight);
+        [width, height] = snippet.map([width, height], sizeValue => sizeValue * scaleHeight);
+
+        return {
+            top: (originalHeight - height) / 2,
+            left: (originalWidth - width) / 2,
+            width,
+            height
         };
     }
 

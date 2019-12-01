@@ -1,11 +1,13 @@
 /**
  * @fileoverview Test env
- * @author NHN Ent. FE Development Lab <dl_javascript@nhnent.com>
+ * @author NHN Ent. FE Development Lab <dl_javascript@nhn.com>
  */
 
 import snippet from 'tui-code-snippet';
 import Promise from 'core-js/library/es6/promise';
 import ImageEditor from '../src/js/imageEditor';
+import util from '../src/js/util';
+import consts from '../src/js/consts';
 
 describe('ImageEditor', () => {
     // hostnameSent module scope variable can not be reset.
@@ -15,7 +17,7 @@ describe('ImageEditor', () => {
 
         beforeEach(() => {
             el = document.createElement('div');
-            spyOn(snippet, 'imagePing');
+            spyOn(snippet, 'sendHostname');
 
             imageEditor = new ImageEditor(el, {
                 usageStatistics: false
@@ -29,7 +31,7 @@ describe('ImageEditor', () => {
         xit('should send hostname by default', () => {
             imageEditor = new ImageEditor(el);
 
-            expect(snippet.imagePing).toHaveBeenCalled();
+            expect(snippet.sendHostname).toHaveBeenCalled();
         });
 
         xit('should not send hostname on usageStatistics option false', () => {
@@ -37,7 +39,7 @@ describe('ImageEditor', () => {
                 usageStatistics: false
             });
 
-            expect(snippet.imagePing).not.toHaveBeenCalled();
+            expect(snippet.sendHostname).not.toHaveBeenCalled();
         });
 
         it('removeObjectStream () must be executed as many times as the length of the Object array.', done => {
@@ -58,12 +60,33 @@ describe('ImageEditor', () => {
             });
         });
 
+        it('`preventDefault` of BACKSPACE key events should not be executed when object is selected state.', () => {
+            const spyCallback = jasmine.createSpy();
+
+            spyOn(imageEditor._graphics, 'getActiveObject').and.returnValue(null);
+            spyOn(imageEditor._graphics, 'getActiveObjects').and.returnValue(null);
+
+            imageEditor._onKeyDown({
+                keyCode: consts.keyCodes.BACKSPACE,
+                preventDefault: spyCallback
+            });
+
+            expect(spyCallback).not.toHaveBeenCalled();
+        });
+
         describe('removeActiveObject()', () => {
             it('_removeObjectStream should be executed when group exists.', () => {
                 spyOn(imageEditor._graphics, 'getActiveObject');
-                spyOn(imageEditor._graphics, 'getActiveGroupObject').and.returnValue({
-                    getObjects: () => [1, 2, 3]
-                });
+                const activeSelection = {
+                    type: 'activeSelection',
+                    size() {
+                        return 3;
+                    },
+                    getObjects() {
+                        return [1, 2, 3];
+                    }
+                };
+                spyOn(imageEditor._graphics, 'getActiveObjects').and.returnValue(activeSelection);
                 spyOn(imageEditor, '_removeObjectStream');
                 spyOn(imageEditor, 'discardSelection');
 
@@ -74,7 +97,7 @@ describe('ImageEditor', () => {
             });
 
             it('removeObject must be executed when group does not exist.', () => {
-                spyOn(imageEditor._graphics, 'getActiveGroupObject').and.returnValue(null);
+                spyOn(imageEditor._graphics, 'getActiveObjects').and.returnValue(null);
                 spyOn(imageEditor._graphics, 'getActiveObject').and.returnValue(jasmine.any(Object));
                 spyOn(imageEditor._graphics, 'getObjectId');
                 spyOn(imageEditor, 'removeObject');

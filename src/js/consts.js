@@ -1,5 +1,5 @@
 /**
- * @author NHN Ent. FE Development Team <dl_javascript@nhnent.com>
+ * @author NHN Ent. FE Development Team <dl_javascript@nhn.com>
  * @fileoverview Constants
  */
 import util from './util';
@@ -119,18 +119,20 @@ module.exports = {
      * @type {Object.<string, string>}
      */
     rejectMessages: {
+        addedObject: 'The object is already added.',
         flip: 'The flipX and flipY setting values are not changed.',
-        rotation: 'The current angle is same the old angle.',
-        loadImage: 'The background image is empty.',
+        invalidDrawingMode: 'This operation is not supported in the drawing mode.',
+        invalidParameters: 'Invalid parameters.',
         isLock: 'The executing command state is locked.',
-        undo: 'The promise of undo command is reject.',
-        redo: 'The promise of redo command is reject.',
-        invalidDrawingMode: 'This operation is not supported in the drawing mode',
-        invalidParameters: 'Invalid parameters',
+        loadImage: 'The background image is empty.',
+        loadingImageFailed: 'Invalid image loaded.',
         noActiveObject: 'There is no active object.',
-        unsupportedType: 'Unsupported object type',
         noObject: 'The object is not in canvas.',
-        addedObject: 'The object is already added.'
+        redo: 'The promise of redo command is reject.',
+        rotation: 'The current angle is same the old angle.',
+        undo: 'The promise of undo command is reject.',
+        unsupportedOperation: 'Unsupported operation.',
+        unsupportedType: 'Unsupported object type.'
     },
 
     /**
@@ -182,25 +184,15 @@ module.exports = {
             max: 1,
             value: 0.7
         },
-        removewhiteThresholdRange: {
-            min: 0,
-            max: 255,
-            value: 60
-        },
         removewhiteDistanceRange: {
             min: 0,
-            max: 255,
-            value: 10
-        },
-        gradientTransparencyRange: {
-            min: 0,
-            max: 255,
-            value: 100
+            max: 1,
+            value: 0.2
         },
         brightnessRange: {
-            min: -255,
-            max: 255,
-            value: 100
+            min: -1,
+            max: 1,
+            value: 0
         },
         noiseRange: {
             min: 0,
@@ -214,8 +206,8 @@ module.exports = {
         },
         colorfilterThresholeRange: {
             min: 0,
-            max: 255,
-            value: 45
+            max: 1,
+            value: 0.2
         }
     }
 };
